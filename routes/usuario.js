@@ -12,20 +12,30 @@ var Usuario = require("../models/usuario");
 //==================================================================================
 //Obetener  todos los Usuarios
 //==================================================================================
-app.get("/", (rew, res, next) => {
-  Usuario.find({}, "nombre email img role").exec((err, usuarios) => {
-    if (err) {
-      return res.status(500).json({
-        ok: false,
-        mensaje: "Error cargando Usuarios",
-        errors: err
+app.get("/", (req, res, next) => {
+  var desde = req.query.desde || 0;
+  desde = Number(desde);
+
+  Usuario.find({}, "nombre email img role")
+    .skip(desde)
+    .limit(5)
+    .exec((err, usuarios) => {
+      if (err) {
+        return res.status(500).json({
+          ok: false,
+          mensaje: "Error cargando Usuarios",
+          errors: err
+        });
+      }
+
+      Usuario.count({}, (err, conteo) => {
+        res.status(200).json({
+          ok: true,
+          total: conteo,
+          usuarios: usuarios
+        });
       });
-    }
-    res.status(200).json({
-      ok: true,
-      usuarios: usuarios
     });
-  });
   //200 es todo correcto
 });
 
@@ -124,7 +134,7 @@ app.delete("/:id", mdAuntenticacion.verificaToken, (req, res) => {
     if (!usuarioBorrado) {
       return res.status(400).json({
         ok: false,
-        mensaje: "No existe nignun un Usuario con ese ID",
+        mensaje: "No existe ningun un Usuario con ese ID",
         errors: { message: "No existe ningun un Usuario con ese ID" }
       });
     }
